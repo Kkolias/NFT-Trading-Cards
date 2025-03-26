@@ -1,0 +1,41 @@
+
+
+button, .button {
+    border: 1px solid var(--white-1);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--white-1);
+    font-size: 1.6rem;
+    height: 30px;
+    transition: all 0.2s ease;
+    font-weight: 700;
+    padding: 0 10px;
+
+    &.primary {
+        background: var(--blue-1);
+        color: var(--black-1);
+        border: none;
+    }
+
+    &.secondary {
+        background: var(--black-1);
+        color: var(--white-1);
+    }
+
+    &:hover {
+        cursor: pointer;
+        transform: scale(1.05);
+    }
+
+    &:disabled {
+        background: var(--black-2);
+        color: var(--white-2);
+        border: 1px solid var(--white-2);
+        cursor: not-allowed;
+    }
+
+    &.blank {
+        all: unset;
+        cursor: pointer;
+    }
+}
