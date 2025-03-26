@@ -1,6 +1,6 @@
 <template>
   <div class="component-MyCardsList">
-    <button class="primary" @click="handleOpenPack()">Open Pack</button>
+    <OpenPack :cardList="craftedCards" /> 
 
     <TradingCardList :list="myOwnedCards" />
   </div>
@@ -12,10 +12,12 @@ import { getContract } from '@/utils/getContract'
 import TradingCardList from '@/components/TradingCardList.vue'
 import { parseCardList } from '@/utils/parseCardList'
 import type { ICard } from '@/interfaces/card'
+import OpenPack from '@/components/OpenPack.vue'
 export default {
   mixins: [walletMixin],
   components: {
     TradingCardList,
+    OpenPack
   },
   data: () => ({
     craftedCards: [],
@@ -43,15 +45,6 @@ export default {
       this.contract = contract
       const list = await contract.getCards()
 
-    //   const common = await contract.getRarityToCardsByKey('Common')
-    //   const rare = await contract.getRarityToCardsByKey('Rare')
-    //   const epic = await contract.getRarityToCardsByKey('Epic')
-    //   const legendary = await contract.getRarityToCardsByKey('Legendary')
-    //   console.log('COMMON', common)
-    //   console.log('RARE', rare)
-    //   console.log('EPIC', epic)
-    //   console.log('LEGENDARY', legendary)
-
       const parsedList = parseCardList(list)
       console.log(parsedList)
       this.craftedCards = parsedList
@@ -64,24 +57,9 @@ export default {
 
       this.myCardIds = myCardIdsParsed
     },
-    // async handleOpenPack() {
-    //   const walletAddress = this.walletAddress
-    //   if (!walletAddress) {
-    //     alert('Please connect your wallet')
-    //     return
-    //   }
-    //   const contract = await getContract()
-    //   const tx = await contract.openPack(walletAddress)
-    //   await tx.wait()
-
-    //   this.fetchMyCardIds(contract)
-    // },
+   
     async handleOpenPack() {
-      // // const walletAddress = this.walletAddress
-      // if (!walletAddress) {
-      //   alert('Please connect your wallet')
-      //   return
-      // }
+      
 
       const contract = await getContract()
       contract.on('PackOpened', (add, val) => {

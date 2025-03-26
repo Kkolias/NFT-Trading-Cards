@@ -23,6 +23,9 @@ contract TradingCardNFT is ERC1155, Ownable {
     mapping(address => uint256[]) public userOwnedTokens;
     string[] public existingCardIds;
 
+    address public paymentReceiver = 0xdD2FD4581271e230360230F9337D5c0430Bf44C0;
+    uint256 public packPrice = 0.01 ether;
+
     event SingleCardMinted(address indexed account, uint256 tokenId);
     event PackOpened(address indexed account, uint256[] tokenIds);
     event Debug(uint256 value);
@@ -93,7 +96,8 @@ contract TradingCardNFT is ERC1155, Ownable {
     // v2 tehdään avaus jossa pelaaja saa 5 korttia
     // lasketaan mahdollisuudet olemassa oleville korteille maxSupplyn perusteella, ei huomoida täysin myytyjä
     // jos esim kortilla 1 on maxSupply 100 ja kortilla 2 on maxSupply 10, niin kortti 1 on 10 kertaa todennäköisempi kuin kortti 2
-    function openPackV2() public {
+    function openPackV2() public payable {
+        require(msg.value == packPrice, "Incorrect payment amount");
         address recipient = msg.sender;
 
         uint256 cardsInPack = 5; // Avattavat kortit
@@ -104,7 +108,6 @@ contract TradingCardNFT is ERC1155, Ownable {
 
         for (uint256 i = 0; i < cardsInPack; i++) {
             rarity = getRandomRarity(i);
-
 
             // Arvotaan kortti halutun rarity-luokan sisällä
             cardId = getCardByRarity(rarity, i);
@@ -123,28 +126,36 @@ contract TradingCardNFT is ERC1155, Ownable {
             emit SingleCardMinted(recipient, cardId);
         }
 
+        (bool success, ) = paymentReceiver.call{value: msg.value}("");
+        require(success, "Payment transfer failed");
+
         emit PackOpened(recipient, openedCards);
     }
 
     function getRandomNumber(
-    uint256 min,
-    uint256 max,
-    uint256 nonce
-) public view returns (uint256) {
-    require(min <= max, "Min should be less than max");
-    if (min == max) {
-        return min;
+        uint256 min,
+        uint256 max,
+        uint256 nonce
+    ) public view returns (uint256) {
+        require(min <= max, "Min should be less than max");
+        if (min == max) {
+            return min;
+        }
+
+        // Käytetään noncea (loopin indeksinä) parantamaan satunnaisuutta
+        uint256 randomHash = uint256(
+            keccak256(
+                abi.encodePacked(
+                    block.timestamp,
+                    block.prevrandao,
+                    msg.sender,
+                    nonce
+                )
+            )
+        ) % (max - min + 1);
+
+        return randomHash + min;
     }
-
-    // Käytetään noncea (loopin indeksinä) parantamaan satunnaisuutta
-    uint256 randomHash = uint256(
-        keccak256(
-            abi.encodePacked(block.timestamp, block.prevrandao, msg.sender, nonce)
-        )
-    ) % (max - min + 1);
-
-    return randomHash + min;
-}
 
     function getCardByRarity(
         string memory rarity,
@@ -160,7 +171,9 @@ contract TradingCardNFT is ERC1155, Ownable {
         return availableCardIds[randomIndex];
     }
 
-    function getRandomRarity(uint256 nonce) private view returns (string memory) {
+    function getRandomRarity(
+        uint256 nonce
+    ) private view returns (string memory) {
         uint256 random = getRandomNumber(1, 100, nonce);
 
         // Arvotaan rarity-todennäköisyyksien perusteella
@@ -237,7 +250,9 @@ contract TradingCardNFT is ERC1155, Ownable {
         return _cards;
     }
 
-    function getRarityToCardsByKey(string memory rarity) public view returns (uint256[] memory) {
+    function getRarityToCardsByKey(
+        string memory rarity
+    ) public view returns (uint256[] memory) {
         return rarityToCardIds[rarity];
     }
 }

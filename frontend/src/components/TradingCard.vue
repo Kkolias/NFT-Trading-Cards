@@ -1,12 +1,13 @@
 <template>
   <div class="component-TradingCard">
     <button class="blank" @click="openCard()">
-      <div class="card-wrapper">
+      <div class="card-wrapper" :class="{ hide: revealAnimation && !showCard }">
         <img class="image" :src="imageUrl" alt="card image" />
         <div class="frame" :class="rarity"></div>
+        <div class="back-frame" :class="rarity"></div>
 
         <div class="name-wrapper">
-            <p class="bold">{{ cardName }}</p>
+          <p class="bold">{{ cardName }}</p>
         </div>
       </div>
     </button>
@@ -22,7 +23,18 @@ export default {
       type: Object as () => ICard,
       required: true,
     },
+    revealAnimation: {
+      type: Boolean,
+      default: false,
+    },
+    revealDelaySec: {
+      type: Number,
+      default: 0,
+    },
   },
+  data: () => ({
+    showCard: false,
+  }),
   computed: {
     imageUrl(): string {
       return this.card.imageURI
@@ -47,6 +59,14 @@ export default {
       }
     },
   },
+  mounted() {
+    if (this.revealAnimation) {
+      setTimeout(() => {
+        this.showCard = true
+        console.log('showing card')
+      }, this.revealDelaySec * 1000)
+    }
+  },
   methods: {
     openCard() {
       this.$router.push({ query: { id: this.card.cardId } })
@@ -61,6 +81,9 @@ export default {
     width: 200px;
     height: 300px;
     position: relative;
+
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
     .frame {
       width: 100%;
       // height: 100%;
@@ -70,6 +93,8 @@ export default {
       aspect-ratio: 200/300;
       position: relative;
       z-index: 2;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
 
       &.Common {
         background-image: url('/svg/frame-common.svg');
@@ -88,14 +113,53 @@ export default {
       }
     }
 
+    .back-frame {
+      width: 100%;
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
+      aspect-ratio: 200/300;
+      z-index: 3;
+      position: absolute;
+      top: 0;
+      left: 0;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+
+      transform: rotateY(180deg);
+
+      &.Common {
+        background-image: url('/svg/back-frame-common.svg');
+      }
+
+      &.Rare {
+        background-image: url('/svg/back-frame-rare.svg');
+      }
+
+      &.Epic {
+        background-image: url('/svg/back-frame-epic.svg');
+      }
+
+      &.Legendary {
+        background-image: url('/svg/back-frame-legendary.svg');
+      }
+    }
+
     .image {
       width: 100%;
       position: absolute;
       top: 20px;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      // transform: rotateY(180deg);
     }
 
     .name-wrapper {
-        display: none;
+      display: none;
+    }
+
+    &.hide {
+      transform: rotateY(180deg);
     }
   }
 
@@ -115,17 +179,16 @@ export default {
         width: 100%;
 
         p {
-            text-align: center;
-            font-size: 2.4rem;
-            color: var(--black-1);
+          text-align: center;
+          font-size: 2.4rem;
+          color: var(--black-1);
         }
-
       }
     }
 
     .image {
-        width: calc(100% - 40px);
-        left: 20px;
+      width: calc(100% - 40px);
+      left: 20px;
     }
   }
 }

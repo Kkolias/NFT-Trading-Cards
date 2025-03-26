@@ -2,7 +2,7 @@
   <div class="component-TradingCardList">
     <ul>
       <li v-for="card in list">
-        <TradingCard :card="card" />
+        <TradingCard  :card="card" />
       </li>
     </ul>
 
